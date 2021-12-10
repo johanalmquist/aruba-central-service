@@ -1,0 +1,12 @@
+[submodule "central-api-service"]
+	path = central-api-service
+	url = https://github.com/johanalmquist/central-api-service.git
+[submodule "central-webhook-receiver"]
+	path = central-webhook-receiver
+	url = https://github.com/johanalmquist/central-webhook-receiver.git
+[submodule "inventroy-service"]
+	path = inventroy-service
+	url = https://github.com/johanalmquist/inventroy-service.git
+[submodule "notification-service"]
+	path = notification-service
+	url = https://github.com/johanalmquist/notification-service.git
