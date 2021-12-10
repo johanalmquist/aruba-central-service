@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    ports:
+      - 5672:5672
+      - 15672:15672
+  web:
+    build: ./central-webhook-receiver
+    restart: always
+    container_name: webhook-receiver-service
+    command: bash -c "uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - ./central-webhook-receiver/:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - rabbitmq
+    env_file:
+      - ./central-webhook-receiver/.env
+  central-api:
+    build: ./central-api-service
+    container_name: central-api-service
+    command: python src/main.py
+    volumes:
+      - ./central-api-service/:/code
+    depends_on:
+      - rabbitmq
+    env_file:
+      - ./central-api-service/.env
+  db:
+    image: mysql
+    restart: always
+    container_name: db
+    environment:
+      MYSQL_DATABASE: 'db'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - my-db:/var/lib/mysql
+
+  notification:
+    build: ./notification-service/
+    restart: always
+    container_name: notification-service
+    command: bash -c "uvicorn src.main:app --host 0.0.0.0 --port 8001 --reload"
+    volumes:
+      - ./notification-service/:/code
+    ports:
+      - "8001:8001"
+    depends_on:
+      - web
+      - rabbitmq
+    env_file:
+      - ./notification-service/.env
+
+  inventory:
+    build: ./inventroy-service/
+    restart: always
+    container_name: inventroy-service
+    command: bash -c "uvicorn src.main:app --host 0.0.0.0 --port 8002 --reload"
+    volumes:
+      - ./inventroy-service/:/code
+    ports:
+      - "8002:8002"
+    env_file:
+      - ./inventroy-service/.env
+    depends_on:
+      - db
+
+volumes:
+  my-db: null
